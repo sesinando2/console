@@ -1,0 +1,126 @@
+import net.dlcruz.gradle.liquibase.LiquibasePlugin
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.beust:jcommander:1.74'
+        classpath 'org.yaml:snakeyaml:1.23'
+        classpath 'org.liquibase:liquibase-groovy-dsl:2.0.2'
+    }
+}
+
+plugins {
+    id 'org.jetbrains.kotlin.plugin.jpa' version '1.2.71'
+    id 'org.springframework.boot' version '2.1.3.RELEASE'
+    id 'org.jetbrains.kotlin.jvm' version '1.2.71'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.2.71'
+}
+
+apply plugin: 'kotlin-jpa'
+apply plugin: 'groovy'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: LiquibasePlugin
+
+def applicationProperties = new org.yaml.snakeyaml.Yaml().load(new File("$projectDir/src/main/resources/application.yml").newInputStream())
+
+liquibaseConfig {
+    url = applicationProperties.spring.datasource.url
+    driver = "${applicationProperties.spring.datasource.'driver-class-name'}"
+    username = applicationProperties.spring.datasource.username
+    jpaPackage = 'net.dlcruz.springboot.console.template'
+    logLevel = 'debug'
+    fileExtension = 'groovy'
+}
+
+sourceSets {
+    functionalTest {
+        groovy {
+            compileClasspath += main.output
+            compileClasspath += main.compileClasspath
+            compileClasspath += test.compileClasspath
+            runtimeClasspath += test.runtimeClasspath
+        }
+    }
+}
+
+sourceCompatibility = '1.8'
+
+repositories {
+    mavenCentral()
+    jcenter()
+    mavenLocal()
+}
+
+configurations {
+    ktlint
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.liquibase:liquibase-core'
+    runtimeOnly 'org.springframework.boot:spring-boot-devtools'
+    runtimeOnly 'mysql:mysql-connector-java'
+
+    implementation 'org.liquibase:liquibase-groovy-dsl:1.2.2'
+    implementation 'com.github.fonimus:ssh-shell-spring-boot-starter:1.1.2-SNAPSHOT'
+    implementation 'org.modelmapper:modelmapper:2.3.2'
+
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.codehaus.groovy:groovy'
+    testImplementation 'org.spockframework:spock-core:1.1-groovy-2.4'
+    testImplementation 'org.spockframework:spock-spring:1.1-groovy-2.4'
+
+    ktlint 'com.github.shyiko:ktlint:0.30.0'
+}
+
+noArg {
+    annotation('net.dlcruz.springboot.console.template.common.NoArgs')
+}
+
+compileKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjsr305=strict']
+        jvmTarget = '1.8'
+    }
+}
+
+compileTestKotlin {
+    kotlinOptions {
+        freeCompilerArgs = ['-Xjsr305=strict']
+        jvmTarget = '1.8'
+    }
+}
+
+task ktlint(type: JavaExec, group: "verification") {
+    description = "Check Kotlin code style."
+    main = "com.github.shyiko.ktlint.Main"
+    classpath = configurations.ktlint
+    args "src/**/*.kt"
+    // to generate report in checkstyle format prepend following args:
+    // "--reporter=plain", "--reporter=checkstyle,output=${buildDir}/ktlint.xml"
+    // see https://github.com/shyiko/ktlint#usage for more
+}
+
+task ktlintFormat(type: JavaExec, group: "formatting") {
+    description = "Fix Kotlin code style deviations."
+    main = "com.github.shyiko.ktlint.Main"
+    classpath = configurations.ktlint
+    args "-F", "src/**/*.kt"
+}
+
+task functionalTest(type: Test) {
+    testClassesDirs = sourceSets.functionalTest.output.classesDirs
+    classpath = sourceSets.functionalTest.runtimeClasspath
+}
+
+check.dependsOn ktlint
