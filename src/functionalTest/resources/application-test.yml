@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/console-test?serverTimezone=UTC&createDatabaseIfNotExist=true
+  jpa:
+    generate-ddl: true
+  liquibase:
+    enabled: false
