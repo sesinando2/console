@@ -7,7 +7,7 @@ import javax.persistence.Id
 
 @Entity
 class PersistentTest(
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        val id: Long
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long
 )
