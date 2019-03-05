@@ -14,4 +14,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 @Retention(RetentionPolicy.RUNTIME)
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @ActiveProfiles(['dev', 'functionalTest'])
-@interface FunctionalTest { }
+@interface FunctionalTest {
+
+}
