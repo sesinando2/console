@@ -9,5 +9,5 @@ import javax.persistence.Id
 class PersistentTest(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long
+    var id: Long? = null
 )
